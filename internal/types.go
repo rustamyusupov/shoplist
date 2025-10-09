@@ -13,6 +13,10 @@ type ItemStorage struct {
 	items map[string]Item
 }
 
+type Handler struct {
+	storage *ItemStorage
+}
+
 type (
 	CreateItemRequest struct {
 		Name string `json:"name" validate:"required"`

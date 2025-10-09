@@ -2,10 +2,6 @@ package internal
 
 import "github.com/gofiber/fiber/v2"
 
-type Handler struct {
-	storage *ItemStorage
-}
-
 func NewHandler(storage *ItemStorage) *Handler {
 	return &Handler{storage: storage}
 }
