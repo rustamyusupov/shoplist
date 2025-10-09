@@ -116,19 +116,7 @@ func (s *ItemStorage) Delete(id string) error {
 	return nil
 }
 
-func main() {
-	app := fiber.New()
-
-	storage := &ItemStorage{
-		items: make(map[string]Item),
-	}
-
-	app.Use(requestid.New())
-	app.Use(logger.New(logger.Config{
-		Format:     "${locals:requestid}: ${time} ${method} ${path} - ${status} - ${latency}\n",
-		TimeFormat: "2006-01-02 15:04:05.000000",
-	}))
-
+func setupRoutes(app *fiber.App, storage *ItemStorage) {
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusOK).SendString("Welcome to Shoplist")
 	})
@@ -148,7 +136,7 @@ func main() {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Could not create item"})
 		}
 
-		return c.Status(fiber.StatusOK).JSON(CreateItemResponse{ID: id})
+		return c.Status(fiber.StatusCreated).JSON(CreateItemResponse{ID: id})
 	})
 
 	app.Get("/list", func(c *fiber.Ctx) error {
@@ -207,6 +195,22 @@ func main() {
 
 		return c.SendStatus(fiber.StatusOK)
 	})
+}
+
+func main() {
+	app := fiber.New()
+
+	storage := &ItemStorage{
+		items: make(map[string]Item),
+	}
+
+	app.Use(requestid.New())
+	app.Use(logger.New(logger.Config{
+		Format:     "${locals:requestid}: ${time} ${method} ${path} - ${status} - ${latency}\n",
+		TimeFormat: "2006-01-02 15:04:05.000000",
+	}))
+
+	setupRoutes(app, storage)
 
 	log.Fatal(app.Listen(":8080"))
 }
