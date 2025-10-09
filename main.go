@@ -31,6 +31,23 @@ type (
 	}
 )
 
+type (
+	ListResponse struct {
+		Items []Item `json:"items"`
+	}
+
+	GetItemResponse struct {
+		Item Item `json:"item"`
+	}
+)
+
+type (
+	UpdateItemRequest struct {
+		Name    *string `json:"name,omitempty"`
+		Checked *bool   `json:"checked,omitempty"`
+	}
+)
+
 func (s *ItemStorage) Create(item Item) (string, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -42,16 +59,6 @@ func (s *ItemStorage) Create(item Item) (string, error) {
 
 	return id, nil
 }
-
-type (
-	ListResponse struct {
-		Items []Item `json:"items"`
-	}
-
-	GetItemResponse struct {
-		Item Item `json:"item"`
-	}
-)
 
 func (s *ItemStorage) List() []Item {
 	s.mu.Lock()
@@ -75,6 +82,38 @@ func (s *ItemStorage) Get(id string) (Item, error) {
 	}
 
 	return item, nil
+}
+
+func (s *ItemStorage) Update(id string, name *string, checked *bool) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	item, ok := s.items[id]
+	if !ok {
+		return fiber.ErrNotFound
+	}
+
+	if name != nil {
+		item.Name = *name
+	}
+	if checked != nil {
+		item.Checked = *checked
+	}
+
+	s.items[id] = item
+	return nil
+}
+
+func (s *ItemStorage) Delete(id string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if _, ok := s.items[id]; !ok {
+		return fiber.ErrNotFound
+	}
+
+	delete(s.items, id)
+	return nil
 }
 
 func main() {
@@ -135,8 +174,39 @@ func main() {
 		return c.Status(fiber.StatusOK).JSON(GetItemResponse{Item: item})
 	})
 
-	// app.Patch("/list/:id", )
-	// app.Delete("/list/:id", )
+	app.Patch("/list/:id", func(c *fiber.Ctx) error {
+		id := c.Params("id")
+
+		var req UpdateItemRequest
+		if err := c.BodyParser(&req); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
+		}
+
+		if req.Name == nil && req.Checked == nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "At least one field (name or checked) must be provided"})
+		}
+
+		if err := storage.Update(id, req.Name, req.Checked); err != nil {
+			if err == fiber.ErrNotFound {
+				return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Item not found"})
+			}
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Could not update item"})
+		}
+
+		return c.SendStatus(fiber.StatusOK)
+	})
+
+	app.Delete("/list/:id", func(c *fiber.Ctx) error {
+		id := c.Params("id")
+		if err := storage.Delete(id); err != nil {
+			if err == fiber.ErrNotFound {
+				return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Item not found"})
+			}
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Could not delete item"})
+		}
+
+		return c.SendStatus(fiber.StatusOK)
+	})
 
 	log.Fatal(app.Listen(":8080"))
 }
