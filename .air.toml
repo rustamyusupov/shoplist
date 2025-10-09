@@ -1,0 +1,15 @@
+root = "."
+tmp_dir = ".tmp"
+
+[build]
+bin = ".tmp/main"
+cmd = "go build -o ./.tmp/main ./cmd/server/main.go"
+delay = 1000
+excludes = [".tmp", ".git", ".vscode"]
+include_ext = ["go", "html"]
+kill_delay = 500
+main = "./cmd/server/main.go"
+rerun_delay = 500
+
+[misc]
+clean_on_exit = true
