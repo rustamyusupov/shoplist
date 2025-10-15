@@ -4,7 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func NewHandler(storage *ItemStorage) *Handler {
+func NewHandler(storage *Storage) *Handler {
 	return &Handler{storage: storage}
 }
 

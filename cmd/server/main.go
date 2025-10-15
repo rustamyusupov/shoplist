@@ -22,7 +22,7 @@ func main() {
 		TimeFormat: "2006-01-02 15:04:05.000000",
 	}))
 
-	storage := internal.NewItemStorage()
+	storage := internal.NewStorage("shoplist.db")
 	handler := internal.NewHandler(storage)
 	internal.SetupRoutes(app, handler)
 

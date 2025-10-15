@@ -1,11 +1,15 @@
-const handleSubmit = async event => {
+const handleSubmit = list => async event => {
   event.preventDefault();
 
-  const input = form.querySelector('#input');
+  const input = document.getElementById('input');
   const name = input.value.trim();
 
   if (!name) {
     return;
+  }
+
+  if (input) {
+    input.disabled = true;
   }
 
   try {
@@ -18,7 +22,6 @@ const handleSubmit = async event => {
     if (response.ok) {
       const { id } = await response.json();
 
-      const list = document.getElementById('list');
       const li = document.createElement('li');
       li.className = 'item';
       li.dataset.id = id;
@@ -26,16 +29,28 @@ const handleSubmit = async event => {
       list.appendChild(li);
 
       input.value = '';
+    } else {
+      console.error('Failed to add item: Server error');
     }
   } catch (error) {
     console.error('Failed to add item:', error);
+  } finally {
+    if (input) input.disabled = false;
   }
 };
 
 const handleItemClick = async event => {
-  const item = event.currentTarget;
+  const item = event.target.closest('.item');
+
+  if (!item) {
+    return;
+  }
+
   const id = item.dataset.id;
   const isChecked = item.classList.contains('checked');
+
+  item.classList.toggle('checked');
+  item.style.pointerEvents = 'none';
 
   try {
     const response = await fetch(`/api/items/${id}`, {
@@ -44,22 +59,24 @@ const handleItemClick = async event => {
       body: JSON.stringify({ checked: !isChecked }),
     });
 
-    if (response.ok) {
+    if (!response.ok) {
       item.classList.toggle('checked');
+      console.error('Failed to update item');
     }
   } catch (error) {
+    item.classList.toggle('checked');
     console.error('Failed to update item:', error);
+  } finally {
+    item.style.pointerEvents = 'auto';
   }
 };
 
-const init = async () => {
+const init = () => {
   const form = document.getElementById('form');
-  form.addEventListener('submit', handleSubmit);
+  const list = document.getElementById('list');
 
-  const items = document.querySelectorAll('.item');
-  items.forEach(item => {
-    item.addEventListener('click', handleItemClick);
-  });
+  form.addEventListener('submit', handleSubmit(list));
+  list.addEventListener('click', handleItemClick);
 };
 
 document.addEventListener('DOMContentLoaded', init);

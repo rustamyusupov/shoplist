@@ -17,7 +17,7 @@
         {{
           range.Items
         }}
-        <li class="item {{if $.Checked}}checked{{ end }}" data-id="{{.ID}}">
+        <li class="item {{if .Checked}}checked{{ end }}" data-id="{{.ID}}">
           {{.Name}}
         </li>
         {{

@@ -1,20 +1,20 @@
 package internal
 
-import "sync"
+import (
+	"database/sql"
+)
 
+type Storage struct {
+	db *sql.DB
+}
 type Item struct {
 	ID      string `json:"id"`
 	Name    string `json:"name"`
 	Checked bool   `json:"checked"`
 }
 
-type ItemStorage struct {
-	mu    sync.Mutex
-	items map[string]Item
-}
-
 type Handler struct {
-	storage *ItemStorage
+	storage *Storage
 }
 
 type (
