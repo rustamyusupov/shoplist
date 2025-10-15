@@ -4,9 +4,11 @@ import "github.com/gofiber/fiber/v2"
 
 func SetupRoutes(app *fiber.App, handler *Handler) {
 	app.Get("/", handler.Root)
-	app.Post("/list", handler.CreateItem)
-	app.Get("/list", handler.ListItems)
-	app.Get("/list/:id", handler.GetItem)
-	app.Patch("/list/:id", handler.UpdateItem)
-	app.Delete("/list/:id", handler.DeleteItem)
+
+	api := app.Group("/api")
+	api.Post("/items", handler.CreateItem)
+	api.Get("/items", handler.ListItems)
+	api.Get("/items/:id", handler.GetItem)
+	api.Patch("/items/:id", handler.UpdateItem)
+	api.Delete("/items/:id", handler.DeleteItem)
 }

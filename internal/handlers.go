@@ -1,13 +1,20 @@
 package internal
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"github.com/gofiber/fiber/v2"
+)
 
 func NewHandler(storage *ItemStorage) *Handler {
 	return &Handler{storage: storage}
 }
 
 func (h *Handler) Root(c *fiber.Ctx) error {
-	return c.Status(fiber.StatusOK).SendString("Welcome to Shoplist")
+	items := h.storage.List()
+
+	return c.Render("root", fiber.Map{
+		"Title": "Shoplist",
+		"Items": items,
+	})
 }
 
 func (h *Handler) CreateItem(c *fiber.Ctx) error {
