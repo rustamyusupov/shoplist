@@ -1,6 +1,8 @@
 package internal
 
 import (
+	"sort"
+
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -10,6 +12,10 @@ func NewHandler(storage *Storage) *Handler {
 
 func (h *Handler) Root(c *fiber.Ctx) error {
 	items := h.storage.List()
+
+	sort.Slice(items, func(i, j int) bool {
+		return !items[i].Checked && items[j].Checked
+	})
 
 	return c.Render("root", fiber.Map{
 		"Title": "Shoplist",
@@ -37,6 +43,10 @@ func (h *Handler) CreateItem(c *fiber.Ctx) error {
 
 func (h *Handler) ListItems(c *fiber.Ctx) error {
 	items := h.storage.List()
+
+	sort.Slice(items, func(i, j int) bool {
+		return !items[i].Checked && items[j].Checked
+	})
 
 	resp := ListResponse{
 		Items: make([]Item, len(items)),
