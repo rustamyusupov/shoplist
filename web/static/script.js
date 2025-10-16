@@ -30,6 +30,33 @@ const handleListClick = async event => {
   }
 };
 
+const handleListDblClick = async event => {
+  const item = event.target.closest('[data-id]');
+
+  if (!item) {
+    return;
+  }
+
+  const id = item.dataset.id;
+  item.style.pointerEvents = 'none';
+
+  try {
+    const response = await fetch(`/api/items/${id}`, {
+      method: 'DELETE',
+    });
+
+    if (response.ok) {
+      item.remove();
+    } else {
+      console.error('Failed to delete item');
+    }
+  } catch (error) {
+    console.error('Failed to delete item:', error);
+  } finally {
+    item.style.pointerEvents = 'auto';
+  }
+};
+
 const handleSubmit = list => async event => {
   event.preventDefault();
 
@@ -76,6 +103,7 @@ const init = () => {
   const form = document.getElementById('form');
 
   list.addEventListener('click', handleListClick);
+  list.addEventListener('dblclick', handleListDblClick);
   form.addEventListener('submit', handleSubmit(list));
 };
 
