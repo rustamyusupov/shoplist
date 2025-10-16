@@ -13,17 +13,7 @@
       <h1 class="title">{{.Title}}</h1>
     </header>
     <main class="main">
-      <ul id="list" class="list">
-        {{
-          range.Items
-        }}
-        <li class="item {{if .Checked}}checked{{ end }}" data-id="{{.ID}}">
-          {{.Name}}
-        </li>
-        {{
-          end
-        }}
-      </ul>
+      <ul id="list" class="list"></ul>
       <form id="form" class="form">
         <input
           id="input"

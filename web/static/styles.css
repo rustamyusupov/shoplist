@@ -3,7 +3,7 @@
   --color-gray: #c4c4c4;
   --color-white: #fff;
   font-family: system-ui, sans-serif;
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1.3;
 }
 
@@ -25,6 +25,11 @@ h2 {
 
 ul {
   list-style-type: none;
+}
+
+button {
+  all: unset;
+  cursor: pointer;
 }
 
 .root {
@@ -53,10 +58,12 @@ ul {
 }
 
 .item {
+  display: flex;
+  justify-content: space-between;
   max-width: 70ch;
   padding-left: 15px;
 
-  &.checked {
+  &.checked .text {
     opacity: 0.6;
     text-decoration: line-through;
   }

@@ -1,126 +1,102 @@
 const focusInput = () => {
   const input = document.getElementById('input');
+  input.focus();
+};
 
-  if (input) {
-    input.focus();
+const renderItem = item => {
+  const li = document.createElement('li');
+  li.className = 'item' + (item.checked ? ' checked' : '');
+  li.dataset.id = item.id;
+
+  const text = document.createElement('button');
+  text.className = 'text';
+  text.textContent = item.name;
+  li.appendChild(text);
+
+  if (item.checked) {
+    const cross = document.createElement('button');
+    cross.className = 'cross';
+    cross.textContent = '♻️';
+    cross.addEventListener('click', handleCrossClick);
+
+    li.appendChild(cross);
   }
+
+  return li;
+};
+
+const renderList = async () => {
+  const list = document.getElementById('list');
+  const fragment = document.createDocumentFragment();
+
+  const response = await fetch('/api/items');
+  const { items } = await response.json();
+
+  list.innerHTML = '';
+  fragment.append(...items.map(renderItem));
+  list.appendChild(fragment);
+};
+
+const handleCrossClick = async event => {
+  event.stopPropagation();
+
+  const item = event.target.closest('[data-id]');
+  item.style.pointerEvents = 'none';
+
+  await fetch(`/api/items/${item.dataset.id}`, { method: 'DELETE' });
+  await renderList();
+
+  item.style.pointerEvents = 'auto';
+  focusInput();
 };
 
 const handleListClick = async event => {
-  const item = event.target.closest('[data-id]');
-
-  if (!item) {
+  if (!event.target.classList.contains('text')) {
     return;
   }
 
-  const id = item.dataset.id;
+  const item = event.target.closest('[data-id]');
   const isChecked = item.classList.contains('checked');
-
-  item.classList.toggle('checked');
   item.style.pointerEvents = 'none';
 
-  try {
-    const response = await fetch(`/api/items/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ checked: !isChecked }),
-    });
+  await fetch(`/api/items/${item.dataset.id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ checked: !isChecked }),
+  });
+  await renderList();
 
-    if (!response.ok) {
-      item.classList.toggle('checked');
-      console.error('Failed to update item');
-    }
-  } catch (error) {
-    item.classList.toggle('checked');
-    console.error('Failed to update item:', error);
-  } finally {
-    item.style.pointerEvents = 'auto';
-    focusInput();
-  }
+  item.style.pointerEvents = 'auto';
+  focusInput();
 };
 
-const handleListDblClick = async event => {
-  const item = event.target.closest('[data-id]');
-
-  if (!item) {
-    return;
-  }
-
-  const id = item.dataset.id;
-  item.style.pointerEvents = 'none';
-
-  try {
-    const response = await fetch(`/api/items/${id}`, {
-      method: 'DELETE',
-    });
-
-    if (response.ok) {
-      item.remove();
-    } else {
-      console.error('Failed to delete item');
-    }
-  } catch (error) {
-    console.error('Failed to delete item:', error);
-  } finally {
-    item.style.pointerEvents = 'auto';
-    focusInput();
-  }
-};
-
-const handleSubmit = list => async event => {
+const handleSubmit = async event => {
   event.preventDefault();
 
   const input = document.getElementById('input');
-  const name = input.value.trim();
+  input.disabled = true;
 
-  if (!name) {
-    return;
-  }
+  await fetch('/api/items', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: input.value.trim() }),
+  });
+  await renderList();
 
-  if (input) {
-    input.disabled = true;
-  }
-
-  try {
-    const response = await fetch('/api/items', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name }),
-    });
-
-    if (response.ok) {
-      const { id } = await response.json();
-
-      const li = document.createElement('li');
-      li.className = 'item';
-      li.dataset.id = id;
-      li.textContent = name;
-      list.appendChild(li);
-
-      input.value = '';
-    } else {
-      console.error('Failed to add item: Server error');
-    }
-  } catch (error) {
-    console.error('Failed to add item:', error);
-  } finally {
-    if (input) {
-      input.disabled = false;
-    }
-
-    focusInput();
-  }
+  input.value = '';
+  input.disabled = false;
+  focusInput();
 };
 
 const init = () => {
-  const list = document.getElementById('list');
   const form = document.getElementById('form');
+  const list = document.getElementById('list');
 
+  form.addEventListener('submit', handleSubmit);
   list.addEventListener('click', handleListClick);
-  list.addEventListener('dblclick', handleListDblClick);
-  form.addEventListener('submit', handleSubmit(list));
 
   focusInput();
+  renderList();
 };
 
 document.addEventListener('DOMContentLoaded', init);
