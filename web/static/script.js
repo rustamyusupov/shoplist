@@ -1,3 +1,11 @@
+const focusInput = () => {
+  const input = document.getElementById('input');
+
+  if (input) {
+    input.focus();
+  }
+};
+
 const handleListClick = async event => {
   const item = event.target.closest('[data-id]');
 
@@ -27,6 +35,7 @@ const handleListClick = async event => {
     console.error('Failed to update item:', error);
   } finally {
     item.style.pointerEvents = 'auto';
+    focusInput();
   }
 };
 
@@ -54,6 +63,7 @@ const handleListDblClick = async event => {
     console.error('Failed to delete item:', error);
   } finally {
     item.style.pointerEvents = 'auto';
+    focusInput();
   }
 };
 
@@ -94,7 +104,11 @@ const handleSubmit = list => async event => {
   } catch (error) {
     console.error('Failed to add item:', error);
   } finally {
-    if (input) input.disabled = false;
+    if (input) {
+      input.disabled = false;
+    }
+
+    focusInput();
   }
 };
 
@@ -105,6 +119,8 @@ const init = () => {
   list.addEventListener('click', handleListClick);
   list.addEventListener('dblclick', handleListDblClick);
   form.addEventListener('submit', handleSubmit(list));
+
+  focusInput();
 };
 
 document.addEventListener('DOMContentLoaded', init);
