@@ -1,3 +1,3 @@
 ## shoplist
 
-[![publish](https://github.com/rustamyusupov/shoplist/actions/workflows/publish.yml/badge.svg)](https://github.com/rustamyusupov/shoplist/actions/workflows/publish.yml)
+[![Publish](https://github.com/rustamyusupov/shoplist/actions/workflows/deploy.yml/badge.svg?branch=main)](https://github.com/rustamyusupov/shoplist/actions/workflows/deploy.yml)
