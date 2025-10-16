@@ -14,7 +14,13 @@ func (h *Handler) Root(c *fiber.Ctx) error {
 	items := h.storage.List()
 
 	sort.Slice(items, func(i, j int) bool {
-		return !items[i].Checked && items[j].Checked
+		if items[i].Checked != items[j].Checked {
+			return !items[i].Checked && items[j].Checked
+		}
+		if items[i].Checked {
+			return items[i].ModifiedAt.Before(items[j].ModifiedAt)
+		}
+		return items[i].ModifiedAt.Before(items[j].ModifiedAt)
 	})
 
 	return c.Render("root", fiber.Map{
@@ -45,7 +51,13 @@ func (h *Handler) ListItems(c *fiber.Ctx) error {
 	items := h.storage.List()
 
 	sort.Slice(items, func(i, j int) bool {
-		return !items[i].Checked && items[j].Checked
+		if items[i].Checked != items[j].Checked {
+			return !items[i].Checked && items[j].Checked
+		}
+		if items[i].Checked {
+			return items[i].ModifiedAt.Before(items[j].ModifiedAt)
+		}
+		return items[i].ModifiedAt.Before(items[j].ModifiedAt)
 	})
 
 	resp := ListResponse{

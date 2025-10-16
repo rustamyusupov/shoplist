@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"strconv"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	_ "github.com/mattn/go-sqlite3"
@@ -28,7 +29,8 @@ func NewStorage(dbPath string) *Storage {
     CREATE TABLE IF NOT EXISTS items (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
-        checked BOOLEAN NOT NULL DEFAULT 0
+        checked BOOLEAN NOT NULL DEFAULT 0,
+        modified_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );`
 
 	if _, err := db.Exec(createTableSQL); err != nil {
@@ -44,9 +46,10 @@ func (s *Storage) Close() error {
 }
 
 func (s *Storage) Create(item Item) (string, error) {
+	now := time.Now()
 	result, err := s.db.Exec(
-		"INSERT INTO items (name, checked) VALUES (?, ?)",
-		item.Name, false,
+		"INSERT INTO items (name, checked, modified_at) VALUES (?, ?, ?)",
+		item.Name, false, now,
 	)
 	if err != nil {
 		return "", err
@@ -61,7 +64,7 @@ func (s *Storage) Create(item Item) (string, error) {
 }
 
 func (s *Storage) List() []Item {
-	rows, err := s.db.Query("SELECT id, name, checked FROM items")
+	rows, err := s.db.Query("SELECT id, name, checked, modified_at FROM items")
 	if err != nil {
 		return []Item{}
 	}
@@ -70,9 +73,11 @@ func (s *Storage) List() []Item {
 	var items []Item
 	for rows.Next() {
 		var item Item
-		if err := rows.Scan(&item.ID, &item.Name, &item.Checked); err != nil {
+		var modifiedAt time.Time
+		if err := rows.Scan(&item.ID, &item.Name, &item.Checked, &modifiedAt); err != nil {
 			continue
 		}
+		item.ModifiedAt = modifiedAt
 		items = append(items, item)
 	}
 
@@ -81,9 +86,10 @@ func (s *Storage) List() []Item {
 
 func (s *Storage) Get(id string) (Item, error) {
 	var item Item
+	var modifiedAt time.Time
 	err := s.db.QueryRow(
-		"SELECT id, name, checked FROM items WHERE id = ?", id,
-	).Scan(&item.ID, &item.Name, &item.Checked)
+		"SELECT id, name, checked, modified_at FROM items WHERE id = ?", id,
+	).Scan(&item.ID, &item.Name, &item.Checked, &modifiedAt)
 
 	if err == sql.ErrNoRows {
 		return Item{}, fiber.ErrNotFound
@@ -92,10 +98,12 @@ func (s *Storage) Get(id string) (Item, error) {
 		return Item{}, err
 	}
 
+	item.ModifiedAt = modifiedAt
 	return item, nil
 }
 
 func (s *Storage) Update(id string, name *string, checked *bool) error {
+	now := time.Now()
 	query := "UPDATE items SET "
 	args := []interface{}{}
 	updates := []string{}
@@ -108,6 +116,8 @@ func (s *Storage) Update(id string, name *string, checked *bool) error {
 		updates = append(updates, "checked = ?")
 		args = append(args, *checked)
 	}
+	updates = append(updates, "modified_at = ?")
+	args = append(args, now)
 
 	if len(updates) == 0 {
 		return nil

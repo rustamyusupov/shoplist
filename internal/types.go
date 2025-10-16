@@ -2,15 +2,17 @@ package internal
 
 import (
 	"database/sql"
+	"time"
 )
 
 type Storage struct {
 	db *sql.DB
 }
 type Item struct {
-	ID      string `json:"id"`
-	Name    string `json:"name"`
-	Checked bool   `json:"checked"`
+	ID         string    `json:"id"`
+	Name       string    `json:"name"`
+	Checked    bool      `json:"checked"`
+	ModifiedAt time.Time `json:"modified_at"`
 }
 
 type Handler struct {
